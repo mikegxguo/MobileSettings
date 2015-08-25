@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, MobileSettingsActivity!</string>
+    <string name="app_name">MobileSettings</string>
+    <string name="set_apn">Set  APN</string>
+     <string name="get_apn">Get APN</string>
+    <string name="set_apn_tip">\nOpen the file(apns.xml) firstly, then read the APN setting,\n write it into database(telephony.db),\n set it as current APN.</string>
+     <string name="get_apn_tip">\nRead the current APN via database(telephony.db),\n then save it into the file(apns.xml)</string>
+     <string name="status_tip">\nClick this button, we will see the current mobile status</string>
+     
+    <!-- Device Info --> <skip />
+    <!-- Device Info screen. Used for a status item's value when the proper value is not known -->
+    <string name="device_info_default">Unknown</string>
+     
+     <!-- About phone screen, show when a value of some status item is unavailable. -->
+    <string name="device_info_not_available">Not available</string>
+    <!-- About phone screen, phone status screen title -->
+    <string name="device_status_activity_title">Status</string>
+    <!-- About phone screen, title of the item to go into the Phone status screen -->
+    <string name="device_status">Status</string>
+     
+     <!-- Do not translate. About phone, status item title -->
+    <string name="status_imei">IMEI</string>
+    <!-- Do not translate. About phone, status item title -->
+    <string name="status_imei_sv">IMEI SV</string>
+    <!-- About tablet, status item title.  The Mobile Directory Number [CHAR LIMIT=30] -->
+    <string name="status_number" product="tablet">MDN</string>
+    <!-- About phone, status item title.  The phone number of the current device [CHAR LIMIT=30] -->
+    <string name="status_number" product="default">My phone number</string>
+    <!-- About phone, status item title.  The phone MIN number of the current device.-->
+    <string name="status_min_number">MIN</string>
+    <!-- About phone, status item title.  The phone MSID number of the current device.-->
+    <string name="status_msid_number">MSID</string>
+    <!-- About phone, status item title.  The phone PRL Version of the current device.-->
+    <string name="status_prl_version">PRL Version</string>
+    <!-- About phone, status item title.  The phone MEID number of the current LTE/CDMA device. [CHAR LIMIT=30] -->
+    <string name="status_meid_number">MEID</string>
+    <!-- About phone, status item title.  The ICCID of the current LTE device. [CHAR LIMIT=30] -->
+    <string name="status_icc_id">ICCID</string>
+    <!-- About phone, status item title for the type of data phone network we're connected to, for example 3G or Edge or GPRS -->
+    <string name="status_network_type">Mobile network type</string>
+    <!-- About phone, status item title. The status of data access.  For example, the value may be "Connected" -->
+    <string name="status_data_state">Mobile network state</string>
+    <!-- About phone, status item title. The status of whether we have service.  for example, the value may be "In service" -->
+    <string name="status_service_state">Service state</string>
+    <!-- About phone, status item title. The  current cell tower signal strength -->
+    <string name="status_signal_strength">Signal strength</string>
+    <!-- About phone, status item title, The status for roaming.  For example, the value might be "Not roaming" -->
+    <string name="status_roaming">Roaming</string>
+    <!-- About phone, status item title. The cell carrier that the user is connected to.  -->
+    <string name="status_operator">Network</string>
+
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_data_disconnected">Disconnected</string>
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_data_connecting">Connecting</string>
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_data_connected">Connected</string>
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_data_suspended">Suspended</string>
+
+    <!-- Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_unknown">unknown</string>
+    
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_service_in">In service</string>
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_service_out">Out of service</string>
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_service_emergency">Emergency calls only</string>
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_service_off">Radio off</string>
+
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_roaming_in">Roaming</string>
+    <!-- Phone Info screen. Status label.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_roaming_not">Not roaming</string>
+    
+    <!-- Phone Info screen. Units shown after a value.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_display_dbm">dBm</string>
+    <!-- Phone Info screen. Units shown after a value.  Used for diagnostic info screens, precise translation isn't needed -->
+    <string name="radioInfo_display_asu">asu</string>
+    
+</resources>
