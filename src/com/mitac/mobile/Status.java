@@ -21,6 +21,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
@@ -46,7 +47,7 @@ import java.lang.ref.WeakReference;
  */
 public class Status extends PreferenceActivity{
     /** Called when the activity is first created. */
-    static String TAG = "MobileSettingsActivity";
+    static String TAG = "Status";
 
     private static final String KEY_DATA_STATE = "data_state";
     private static final String KEY_SERVICE_STATE = "service_state";
@@ -132,9 +133,10 @@ public class Status extends PreferenceActivity{
     };
 
     public static boolean isWifiOnly(Context context) {
-        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        return (cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE) == false);
+//        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(
+//                Context.CONNECTIVITY_SERVICE);
+//        return (cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE) == false);
+           return false; //Android23 doesn't support the interface above
     }
 
     @Override
@@ -180,6 +182,7 @@ public class Status extends PreferenceActivity{
         } else {
             // NOTE "imei" is the "Device ID" since it represents
             //  the IMEI in GSM and the MEID in CDMA
+            Log.d(TAG, "Mobile is available\n");
             if (mPhone!=null && mPhone.getPhoneName().equals("CDMA")) {
                 setSummaryText(KEY_MEID_NUMBER, mPhone.getMeid());
                 setSummaryText(KEY_MIN_NUMBER, mPhone.getCdmaMin());
@@ -190,10 +193,12 @@ public class Status extends PreferenceActivity{
                 removePreferenceFromScreen(KEY_IMEI_SV);
 
                 //if (mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE) {//Android42
-                if (mPhone.getLteOnCdmaMode() == Phone.LTE_ON_CDMA_TRUE) {
+                //if (mPhone.getLteOnCdmaMode() == Phone.LTE_ON_CDMA_TRUE) {//Android40
+                if (true) {//Android23
                     // Show ICC ID and IMEI for LTE device
                     setSummaryText(KEY_ICC_ID, mPhone.getIccSerialNumber());
-                    setSummaryText(KEY_IMEI, mPhone.getImei());
+                    //setSummaryText(KEY_IMEI, mPhone.getImei());
+                    setSummaryText(KEY_IMEI, "Not supported");//Android23
                 } else {
                     // device is not GSM/UMTS, do not display GSM/UMTS features
                     // check Null in case no specified preference in overlay xml
@@ -201,6 +206,7 @@ public class Status extends PreferenceActivity{
                     removePreferenceFromScreen(KEY_ICC_ID);
                 }
             } else {
+                Log.d(TAG, "Not CDMA");
                 if(mPhone!=null) setSummaryText(KEY_IMEI, mPhone.getDeviceId());
 
                 setSummaryText(KEY_IMEI_SV,
@@ -227,6 +233,7 @@ public class Status extends PreferenceActivity{
             mPhoneStateReceiver = new PhoneStateIntentReceiver(this, mHandler);
             mPhoneStateReceiver.notifySignalStrength(EVENT_SIGNAL_STRENGTH_CHANGED);
             mPhoneStateReceiver.notifyServiceState(EVENT_SERVICE_STATE_CHANGED);
+            Log.d(TAG, "onCreate");
         }
     }
 
@@ -235,6 +242,7 @@ public class Status extends PreferenceActivity{
             super.onResume();
 
             if (!isWifiOnly(getApplicationContext())) {
+                Log.d(TAG, "onResume");
                 mPhoneStateReceiver.registerIntent();
 
                 updateSignalStrength();
@@ -366,7 +374,8 @@ public class Status extends PreferenceActivity{
 
                 if (-1 == signalDbm) signalDbm = 0;
 
-                int signalAsu = mPhoneStateReceiver.getSignalStrengthLevelAsu();
+                //int signalAsu = mPhoneStateReceiver.getSignalStrengthLevelAsu();
+                int signalAsu = mPhoneStateReceiver.getSignalStrength();//Andriod23
 
                 if (-1 == signalAsu) signalAsu = 0;
 

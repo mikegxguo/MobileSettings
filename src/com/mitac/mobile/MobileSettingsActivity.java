@@ -58,14 +58,18 @@ public class MobileSettingsActivity extends Activity {
             Log.d(TAG, "serialize ok");
 
             sdpath = getSDPath();
+            Log.d(TAG, "sdpath: "+sdpath);
             if (sdpath != null) {
                 String path = sdpath + "/" + APN_APP_FILE;
-                // FileOutputStream fos = openFileOutput(APP_FILE_PATH, Context.MODE_PRIVATE);
-                FileOutputStream fos = new FileOutputStream(path);
+                //Android40 solution
+                //FileOutputStream fos = new FileOutputStream(path);
+                //Android23, need create it in the folder(/data/data/com.mitac.mobile/files/)
+                FileOutputStream fos = openFileOutput(APN_APP_FILE, Context.MODE_PRIVATE);
+                Log.d(TAG, "FileOutputStream");
                 fos.write(xml.getBytes("UTF-8"));
                 fos.close();
 
-                // CopySdcardFile(APP_FILE_PATH, path);
+                CopySdcardFile(APP_FILE_PATH, path);
             }
             apns = null;
             parser = null;
@@ -167,6 +171,8 @@ public class MobileSettingsActivity extends Activity {
     }
 
     public int CopySdcardFile(String fromFile, String toFile) {
+        Log.d(TAG, "From File: "+fromFile);
+        Log.d(TAG, "To File: "+toFile);
         try {
             InputStream fosfrom = new FileInputStream(fromFile);
             OutputStream fosto = new FileOutputStream(toFile);
