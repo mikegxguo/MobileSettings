@@ -62,14 +62,14 @@ public class MobileSettingsActivity extends Activity {
             if (sdpath != null) {
                 String path = sdpath + "/" + APN_APP_FILE;
                 //Android40 solution
-                //FileOutputStream fos = new FileOutputStream(path);
-                //Android23, need create it in the folder(/data/data/com.mitac.mobile/files/)
-                FileOutputStream fos = openFileOutput(APN_APP_FILE, Context.MODE_PRIVATE);
+                //Issue: Android23, if claim the system permission, cannot create a file in SD card.
+                //FileOutputStream fos = openFileOutput(APN_APP_FILE, Context.MODE_PRIVATE);
+                FileOutputStream fos = new FileOutputStream(path);
                 Log.d(TAG, "FileOutputStream");
                 fos.write(xml.getBytes("UTF-8"));
                 fos.close();
 
-                CopySdcardFile(APP_FILE_PATH, path);
+                //CopySdcardFile(APP_FILE_PATH, path);
             }
             apns = null;
             parser = null;
@@ -109,7 +109,7 @@ public class MobileSettingsActivity extends Activity {
 
     public void onGetStatus(View v) {
         Intent intent = new Intent();
-        intent.setClass(this, Status.class);
+        intent.setClassName("com.android.settings", "com.android.settings.deviceinfo.Status");
         startActivity(intent);        
     }
 
@@ -183,7 +183,7 @@ public class MobileSettingsActivity extends Activity {
             }
             fosfrom.close();
             fosto.close();
-            return 0;
+           return 0;
         } catch (Exception ex) {
             return -1;
         }
