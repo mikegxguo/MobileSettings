@@ -27,7 +27,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.PhoneStateIntentReceiver;
 import com.android.internal.telephony.TelephonyProperties;
-//import com.android.internal.telephony.PhoneConstants; //Android42
+import com.android.internal.telephony.PhoneConstants; //Android42
 
 import java.lang.ref.WeakReference;
 
@@ -192,8 +192,8 @@ public class Status extends PreferenceActivity{
                 setSummaryText(KEY_PRL_VERSION, mPhone.getCdmaPrlVersion());
                 removePreferenceFromScreen(KEY_IMEI_SV);
 
-                //if (mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE) {//Android42
-                if (mPhone.getLteOnCdmaMode() == Phone.LTE_ON_CDMA_TRUE) {//Android40
+                if (mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE) {//Android42
+                //if (mPhone.getLteOnCdmaMode() == Phone.LTE_ON_CDMA_TRUE) {//Android40
                 //if (true) {//Android23
                     // Show ICC ID and IMEI for LTE device
                     setSummaryText(KEY_ICC_ID, mPhone.getIccSerialNumber());

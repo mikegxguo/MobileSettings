@@ -2,7 +2,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 #Android42
-#LOCAL_JAVA_LIBRARIES := bouncycastle telephony-common
+LOCAL_JAVA_LIBRARIES := bouncycastle telephony-common
 #LOCAL_STATIC_JAVA_LIBRARIES := guava
 
 LOCAL_MODULE_TAGS := optional
