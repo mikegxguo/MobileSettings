@@ -1,26 +1,37 @@
 package com.mitac.mobile;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
+import android.os.StatFs;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.telephony.TelephonyManager;
+import android.os.SystemProperties;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 
 import com.mitac.xml.model.APN;
 import com.mitac.xml.parser.APNParser;
@@ -32,8 +43,12 @@ public class MobileSettingsActivity extends Activity {
     static Uri CURRENT_APN_URI = Uri
             .parse("content://telephony/carriers/preferapn");
     static Uri APN_LIST_URI = Uri.parse("content://telephony/carriers");
-    final String APN_APP_FILE = "apns.xml";
+    final String APN_APP_FILE = "mobile/apns.xml";
     final String APP_FILE_PATH = "/data/data/com.mitac.mobile/files/apns.xml";
+    final String MOBILE_FOLDER = "mobile";
+    final String MOBILE_ZIP = "/mobile.zip";
+    private String srcPath = null;
+    private String dstPath = null;
 
     private APNParser parser = null;
     private List<APN> apns = null;
@@ -44,6 +59,9 @@ public class MobileSettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        sdpath = getSDPath();
+        dstPath = sdpath+"/"+MOBILE_FOLDER;
+        new File(dstPath).mkdirs(); //if folder isn't exist, then create
     }
 
     public void onGetAPN(View v) {
@@ -75,7 +93,7 @@ public class MobileSettingsActivity extends Activity {
             parser = null;
 
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, e.toString());
         }
     }
 
@@ -108,18 +126,210 @@ public class MobileSettingsActivity extends Activity {
     }
 
     public void onGetStatus(View v) {
-        Intent intent = new Intent();
-        intent.setClassName("com.android.settings", "com.android.settings.deviceinfo.Status");
-        startActivity(intent);        
+//        Intent intent = new Intent();
+//        intent.setClassName("com.android.settings", "com.android.settings.deviceinfo.Status");
+//        //intent.setClass(this, Status.class);
+//        startActivity(intent);
+        
+        CopyProperty();
+        //CopySettings();
+        //CopyAPN();
+        onGetAPN(null);
+        getRadioProperty();
+        getUserSettings();
+        zipSettings();
+    }
+    
+    public void CopyProperty() {
+        srcPath = "/default.prop";
+        copyFile(srcPath, dstPath);
+        srcPath = "/system/build.prop";
+        copyFile(srcPath, dstPath);
+    }
+    
+    //XXX: Android40: need the parameters in AndroidManefest.xml
+    //android:sharedUserId="android.uid.system"
+    public void CopySettings() {
+        srcPath = "/data/data/com.android.providers.settings/databases/settings.db";
+        copyFile(srcPath, dstPath);
+        srcPath = "/data/data/com.android.providers.settings/databases/settings.db-shm";
+        copyFile(srcPath, dstPath);
+        srcPath = "/data/data/com.android.providers.settings/databases/settings.db-wal";
+        copyFile(srcPath, dstPath);
     }
 
+    //XXX: Android40: need the parameters in AndroidManefest.xml
+    //android:sharedUserId="android.uid.phone"
+    public void CopyAPN() {
+        srcPath = "/data/data/com.android.providers.telephony/databases/telephony.db";
+        copyFile(srcPath, dstPath);
+        srcPath = "/data/data/com.android.providers.telephony/databases/telephony.db-shm";
+        copyFile(srcPath, dstPath);
+        srcPath = "/data/data/com.android.providers.telephony/databases/telephony.db-wal";
+        copyFile(srcPath, dstPath);
+    }
+    
+    public int getUserSettings() {
+        try {
+            OutputStream fosto = new FileOutputStream(dstPath+"/UserSettings.txt");
+            String temp = null;
 
+            //XXX: Android42: Settings.Global,  Android40: Settings.Secure
+            boolean mUserDataEnabled = Settings.Global.getInt(getContentResolver(),
+                    Settings.Global.MOBILE_DATA, 1) == 1;
+            //boolean mUserDataEnabled = Settings.Secure.getInt(getContentResolver(),
+            //        Settings.Secure.MOBILE_DATA, 1) == 1;
+            Log.d(TAG, "MOBILE_DATA: "+mUserDataEnabled);
+            temp = "[MOBILE_DATA]: "+"["+mUserDataEnabled+"]\n";
+            fosto.write(temp.getBytes());
+
+            boolean roaming = Settings.Global.getInt( getContentResolver(),
+                    Settings.Global.DATA_ROAMING) != 0;
+            //boolean roaming = Settings.Secure.getInt( getContentResolver(),
+            //       Settings.Secure.DATA_ROAMING) != 0;
+            Log.d(TAG, "DATA_ROAMING: "+roaming);
+            temp = "[DATA_ROAMING]: "+"["+roaming+"]\n";
+            fosto.write(temp.getBytes());
+
+            int networkMode = Settings.Global.getInt(getContentResolver(),
+                    Settings.Global.PREFERRED_NETWORK_MODE, 0); //default(0): WCDMA/GSM; 1: GSM
+            //int networkMode = Settings.Secure.getInt(getContentResolver(),
+            //        Settings.Secure.PREFERRED_NETWORK_MODE, 0);
+            Log.d(TAG, "PREFERRED_NETWORK_MODE: "+networkMode);
+            temp = "[PREFERRED_NETWORK_MODE]: "+"["+networkMode+"]\n";
+            fosto.write(temp.getBytes());
+
+            fosto.close();
+            return 0;
+        } catch (Exception ex) {
+            Log.e(TAG, ex.toString());
+            return -1;
+        }
+    }
+    
+    //Android42 has these properties, but Android40 hasn't such properties.
+    public int getRadioProperty() {        
+        try {
+            OutputStream fosto = new FileOutputStream(dstPath+"/getProp.txt");
+            String temp = null;
+            
+            String phone_type = SystemProperties.get("gsm.current.phone-type", " ");
+            temp = "[gsm.current.phone-type]: "+"["+phone_type+"]\n";
+            fosto.write(temp.getBytes());
+
+            boolean active = SystemProperties.getBoolean("gsm.defaultpdpcontext.active", false);
+            temp = "[gsm.defaultpdpcontext.active]: "+"["+active+"]\n";
+            fosto.write(temp.getBytes());
+
+            String type = SystemProperties.get("gsm.network.type", " ");
+            temp = "[gsm.network.type]: "+"["+type+"]\n";
+            fosto.write(temp.getBytes());
+                       
+            String operator = SystemProperties.get("gsm.operator.alpha", " ");
+            temp = "[gsm.operator.alpha]: "+"["+operator+"]\n";
+            fosto.write(temp.getBytes());
+
+            String iso = SystemProperties.get("gsm.operator.iso-country", " ");
+            temp = "[gsm.operator.iso-country]: "+"["+iso+"]\n";
+            fosto.write(temp.getBytes());
+
+            boolean roaming = SystemProperties.getBoolean("gsm.operator.isroaming", false);
+            temp = "[gsm.operator.isroaming]: "+"["+roaming+"]\n";
+            fosto.write(temp.getBytes());
+            
+            String numeric = SystemProperties.get("gsm.operator.numeric", " ");
+            temp = "[gsm.operator.numeric]: "+"["+numeric+"]\n";
+            fosto.write(temp.getBytes());
+
+            String loaded = SystemProperties.get("gsm.sim.loaded", " ");
+            temp = "[gsm.sim.loaded]: "+"["+loaded+"]\n";
+            fosto.write(temp.getBytes());
+
+            String alpha = SystemProperties.get("gsm.sim.operator.alpha", " ");
+            temp = "[gsm.sim.operator.alpha]: "+"["+alpha+"\n";
+            fosto.write(temp.getBytes());
+
+            String sim_iso = SystemProperties.get("gsm.sim.operator.iso-country", " ");
+            temp = "[gsm.sim.operator.iso-country]: "+"["+sim_iso+"]\n";
+            fosto.write(temp.getBytes());
+
+            String sim_num = SystemProperties.get("gsm.sim.operator.numeric", " ");
+            temp = "[gsm.sim.operator.numeric]: "+"["+sim_num+"]\n";
+            fosto.write(temp.getBytes());
+
+            String state = SystemProperties.get("gsm.sim.state", " ");
+            temp = "[gsm.sim.state]: "+"["+state+"]\n";
+            fosto.write(temp.getBytes());
+
+            String baseband = SystemProperties.get("gsm.version.baseband", " ");
+            temp = "[gsm.version.baseband]: "+"["+baseband+"]\n";
+            fosto.write(temp.getBytes());
+
+            String ril = SystemProperties.get("gsm.version.ril-impl", " ");
+            temp = "[gsm.version.ril-impl]: "+"["+ril+"]\n";
+            fosto.write(temp.getBytes());
+
+            String dns1 = SystemProperties.get("net.dns1", " ");
+            temp = "[net.dns1]: "+"["+dns1+"]\n";
+            fosto.write(temp.getBytes());
+
+            String dns2 = SystemProperties.get("net.dns2", " ");
+            temp = "[net.dns2]: "+"["+dns2+"]\n";
+            fosto.write(temp.getBytes());
+
+            fosto.close();
+           return 0;
+        } catch (Exception ex) {
+            return -1;
+        }
+        
+    }
+
+    public boolean zipSettings() {
+        boolean mResult = false;
+        String destPath = null;
+        Collection<File> mDealFiles = null;        
+        sdpath = getSDPath();
+        destPath = sdpath+MOBILE_ZIP;
+        mDealFiles = new ArrayList<File>();
+        mDealFiles.add(new File(dstPath));
+        
+        try{
+            Log.i(TAG, mDealFiles.toString());
+            zipFileUtil.setStopFlag(false);
+            zipFileUtil.zipFiles(mDealFiles,new File(destPath));
+            mResult = true;
+        }catch(Exception e){
+            mResult = false;
+            delFile(new File(destPath));
+        }
+        mDealFiles = null;
+        return mResult;    
+    }
+    
+    private boolean delFile(File f) {
+        boolean ret  = false;
+        String path = f.getPath();
+        try {
+          if (f.exists()) {
+            f.delete();
+            Log.d(TAG,"delete file: " + path);
+            ret = true ;
+          }
+        }
+        catch (Exception e) {
+          return false;
+        }
+        return ret;
+      }
+    
     protected String getSIMInfo() {
         TelephonyManager iPhoneManager = (TelephonyManager) this
                 .getSystemService(Context.TELEPHONY_SERVICE);
         return iPhoneManager.getSimOperator();
     }
 
+    
     public String getSDPath() {
         File sdDir = null;
         // Android23, Android40
@@ -130,6 +340,8 @@ public class MobileSettingsActivity extends Activity {
             Log.d(TAG, "getExternalStorageDirectory: " + sdDir.toString());
             //XXX: Android42 need use  hide class(UserEnvironment)
         }
+        //XXX: testing on ULMO, and no SD card;
+        //sdDir = new File("/mnt/internal_sd");
 
         // Android41, add other storage device
 
@@ -559,4 +771,67 @@ public class MobileSettingsActivity extends Activity {
         }
     }
 
+    private boolean copyFile(String oldPath, String newPath) {
+        InputStream inStream = null;
+        FileOutputStream fs = null;
+        try {
+            int bytesum = 0;
+            int byteread = 0;
+            String f_new = "";
+            File f_old = new File(oldPath);
+            // check if enough space for copy
+            StatFs sf = new StatFs(newPath);
+            long vblockSize = (long)sf.getFreeBlocks() * (long)sf.getBlockSize();
+            if(vblockSize < f_old.length()) {
+                return false;
+            }
+            if(newPath.endsWith(File.separator)) {
+                f_new = newPath + f_old.getName();
+            } else {
+                f_new = newPath + File.separator + f_old.getName();
+            }
+            new File(newPath).mkdirs();              //if folder isn't exist, then create
+            new File(f_new).createNewFile();         //if file isn't exist, then create
+             //if file is exist
+            if(f_old.exists()) {
+                Log.d(TAG, "old: "+oldPath);
+                Log.d(TAG, "new: "+f_new);
+                inStream = new FileInputStream(oldPath); //read the old file
+                fs = new FileOutputStream(f_new);
+                byte[] buffer = new byte[1444];
+                while((byteread = inStream.read(buffer)) != -1) {
+                    bytesum += byteread; //byte count
+                    fs.write(buffer, 0, byteread);
+                }
+                
+                if(inStream != null) {
+                    inStream.close();
+                    inStream = null;
+                }
+
+                if(fs != null) {
+                    fs.close();
+                    fs = null;
+                }
+            }
+        } catch(Exception e) {
+            Log.e(TAG, e.toString());
+            try { // release the 
+                if(inStream != null) {
+                    inStream.close();
+                    inStream = null;
+                }
+
+                if(fs != null) {
+                    fs.close();
+                    fs = null;
+                }
+            } catch(IOException ioe) {
+                
+            }
+            return false;
+        }
+        return true;
+    }
+    
 }
