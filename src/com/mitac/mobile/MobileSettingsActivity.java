@@ -125,7 +125,7 @@ public class MobileSettingsActivity extends Activity {
         }
     }
 
-    public void onGetStatus(View v) {
+    public void onConnectInfo(View v) {
 //        Intent intent = new Intent();
 //        intent.setClassName("com.android.settings", "com.android.settings.deviceinfo.Status");
 //        //intent.setClass(this, Status.class);

@@ -44,10 +44,10 @@
         android:textSize="18sp" />
     
     <Button
-        android:id="@+id/status"
+        android:id="@+id/connect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="onGetStatus"
-        android:text="@string/device_status_activity_title" />
+        android:onClick="onConnectInfo"
+        android:text="@string/connect_info" />
     
 </LinearLayout>

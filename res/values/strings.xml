@@ -7,7 +7,9 @@
      <string name="get_apn">Get APN</string>
     <string name="set_apn_tip">\nOpen the file(/sdcard/apns.xml) firstly, then read the APN setting,\n write it into database(telephony.db),\n set it as current APN.</string>
      <string name="get_apn_tip">\nRead the current APN via database(telephony.db),\n then save it into the file(/sdcard/apns.xml)</string>
-     <string name="status_tip">\nClick this button, we will see the current mobile status</string>
+     <string name="status_tip">\nClick this button, we will connect the configures of  mobile network,\n and then zip all these files info a file(/sdcard/mobile.zip)\n</string>
+     <string name="connect_info">Connect mobile information</string>
+     
      
     <!-- Device Info --> <skip />
     <!-- Device Info screen. Used for a status item's value when the proper value is not known -->
